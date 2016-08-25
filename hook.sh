@@ -36,14 +36,23 @@
 # DESTINATION - Copy files to subdirectory of DESTINATION upon successful certificate request
 [[ -z "${DESTINATION}" ]] && DESTINATION=
 
-# OWNER - If DESTINATION and OWNER are set, chown files to OWNER after copy
-[[ -z "${OWNER}" ]] && OWNER=
+# CERT_OWNER - If DESTINATION and CERT_OWNER are set, chown files to CERT_OWNER after copy
+[[ -z "${CERT_OWNER}" ]] && CERT_OWNER=
 
-# GROUP - If DESTINATION, OWNER and GROUP are set, chown files to GROUP after copy
-[[ -z "${GROUP}" ]] && GROUP=
+# CERT_GROUP - If DESTINATION, CERT_OWNER and CERT_GROUP are set, chown files to CERT_GROUP after copy
+[[ -z "${CERT_GROUP}" ]] && CERT_GROUP=
 
-# MODE - If DESTINATION and MODE are set, chmod files to MODE after copy
-[[ -z "${MODE}" ]] && MODE=
+# CERT_MODE - If DESTINATION and CERT_MODE are set, chmod files to CERT_MODE after copy
+[[ -z "${CERT_MODE}" ]] && CERT_MODE=
+
+# CERTDIR_OWNER - If DESTINATION and CERTDIR_OWNER are set, chown files to CERTDIR_OWNER after copy
+[[ -z "${CERTDIR_OWNER}" ]] && CERTDIR_OWNER=
+
+# CERTDIR_GROUP - If DESTINATION, CERTDIR_OWNER and CERTDIR_GROUP are set, chown files to CERTDIR_GROUP after copy
+[[ -z "${CERTDIR_GROUP}" ]] && CERTDIR_GROUP=
+
+# CERTDIR_MODE - If DESTINATION and CERT_MODE are set, chmod files to CERT_MODE after copy
+[[ -z "${CERTDIR_MODE}" ]] && CERTDIR_MODE=
 
 # ATTEMPTS - Wait $ATTEMPTS times $SLEEP seconds for propagation to succeed, then bail out.
 [[ -z "${ATTEMPTS}" ]] && ATTEMPTS=10
@@ -142,19 +151,34 @@ function deploy_cert {
     _log "Copying certificate files to destination repository"
 
     mkdir -p ${DESTINATION}/${DOMAIN}
+    if [ "$CERTDIR_MODE" != ""  ];
+    then
+      chmod ${CERTDIR_MODE} ${DESTINATION}/${DOMAIN}
+    fi
+
+    if [ "$CERTDIR_OWNER" != ""  ];
+    then
+      chown ${CERTDIR_OWNER}:${CERTDIR_GROUP} ${DESTINATION}/${DOMAIN}
+    fi
+
+    if [ "$CERTDIR_MODE" != ""  ];
+    then
+      chmod ${CERTDIR_MODE} ${DESTINATION}/${DOMAIN}
+    fi
+
     for FILE in ${KEYFILE} ${CERTFILE} ${CHAINFILE}
     do
       FILENAME=$(basename $FILE)
       cp ${FILE} ${DESTINATION}/${DOMAIN}
 
-      if [ "$OWNER" != ""  ];
+      if [ "$CERT_OWNER" != ""  ];
       then
-        chown ${OWNER}:${GROUP} ${DESTINATION}/${DOMAIN}/${FILENAME}
+        chown ${CERT_OWNER}:${CERT_GROUP} ${DESTINATION}/${DOMAIN}/${FILENAME}
       fi
 
-      if [ "$MODE" != ""  ];
+      if [ "$CERT_MODE" != ""  ];
       then
-        chmod ${MODE} ${DESTINATION}/${DOMAIN}/${FILENAME}
+        chmod ${CERT_MODE} ${DESTINATION}/${DOMAIN}/${FILENAME}
       fi
     done
   fi
