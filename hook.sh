@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
 # Load letsencrypt.sh config ($CONFIG is exported by letsencrypt.sh)
 . $CONFIG
 
@@ -65,7 +64,8 @@ function _checkdns {
   _log "Checking for dns propagation via Google's recursor..."
 
   host -t txt _acme-challenge.${DOMAIN} 8.8.8.8 | grep ${TOKEN_VALUE} >/dev/null 2>&1
-  if [ "$?" -eq 0 ]; then
+  if [ "$?" -eq 0 ];
+  then
     _log "Propagation success!"
     return
   else
@@ -102,8 +102,13 @@ function deploy_challenge {
   #   be found in the $TOKEN_FILENAME file.
 
   _log "Adding ACME challenge record via RFC2136 update to ${SERVER}..."
-  printf "server %s %s\nupdate add _acme-challenge.%s. %d in TXT \"%s\"\n\n" "${SERVER}" "${PORT}" "${DOMAIN}" "${TTL}" "${TOKEN_VALUE}" | $NSUPDATE
-
+  printf "server %s %s\nupdate add _acme-challenge.%s. %d in TXT \"%s\"\n\n" "${SERVER}" "${PORT}" "${DOMAIN}" "${TTL}" "${TOKEN_VALUE}" | $NSUPDATE > /dev/null 2>&1
+  if [ "$?" -ne 0 ];
+  then
+    _log "Failure reported by nsupdate. Bailing out!"
+    exit 2
+  fi
+  
   # Allow at least a little time to propagate to slaves before asking Google
   sleep 5
 
@@ -120,7 +125,12 @@ function clean_challenge {
   # The parameters are the same as for deploy_challenge.
 
   _log "Removing ACME challenge record via RFC2136 update to ${SERVER}..."
-  printf "server %s %s\nupdate delete _acme-challenge.%s. %d in TXT \"%s\"\n\n" "${SERVER}" "${PORT}" "${DOMAIN}" "${TTL}" "${TOKEN_VALUE}" | $NSUPDATE
+  printf "server %s %s\nupdate delete _acme-challenge.%s. %d in TXT \"%s\"\n\n" "${SERVER}" "${PORT}" "${DOMAIN}" "${TTL}" "${TOKEN_VALUE}" | $NSUPDATE > /dev/null 2>&1
+  if [ "$?" -ne 0 ];
+  then
+    _log "Failure reported by nsupdate. Bailing out!"
+    exit 2
+  fi
 }
 
 function deploy_cert {
@@ -151,7 +161,8 @@ function deploy_cert {
 
   # Add DOMAIN to domains.txt if not already there
   grep ^$HOST\$ ${DOMAINS_TXT} > /dev/null 2>&1
-  if [ "$?" -ne 0 ]; then
+  if [ "$?" -ne 0 ];
+  then
     echo ${DOMAIN} >> ${DOMAINS_TXT}
   fi
 }
