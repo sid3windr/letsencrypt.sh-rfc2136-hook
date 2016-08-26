@@ -70,7 +70,13 @@ function _log {
 function _checkdns {
   local ATTEMPT="${1}" DOMAIN="${2}" TOKEN_VALUE="${3}"
 
-  _log "Checking for dns propagation via Google's recursor..."
+  if [ $ATTEMPT -gt $ATTEMPTS ];
+  then
+    _log "Propagation check failed after ${ATTEMPTS} attempts. Bailing out!"
+    exit 2
+  fi
+
+  _log "Checking for dns propagation via Google's recursor... (${ATTEMPT}/${ATTEMPTS})"
 
   host -t txt _acme-challenge.${DOMAIN} 8.8.8.8 | grep ${TOKEN_VALUE} >/dev/null 2>&1
   if [ "$?" -eq 0 ];
@@ -78,15 +84,10 @@ function _checkdns {
     _log "Propagation success!"
     return
   else
-    if [ $ATTEMPT -eq 0 ];
-    then
-      _log "Propagation check failed after ${ATTEMPTS} attempts. Bailing out!"
-      exit 2
-    fi
 
-    _log "Waiting ${SLEEP}s... ($((ATTEMPTS-ATTEMPT+1))/${ATTEMPTS})"
+    _log "Waiting ${SLEEP}s..."
     sleep ${SLEEP}
-    _checkdns $((ATTEMPT-1)) ${DOMAIN} ${TOKEN_VALUE}
+    _checkdns $((ATTEMPT+1)) ${DOMAIN} ${TOKEN_VALUE}
   fi
 }
 
@@ -121,7 +122,7 @@ function deploy_challenge {
   # Allow at least a little time to propagate to slaves before asking Google
   sleep 5
 
-  _checkdns ${ATTEMPTS} ${DOMAIN} ${TOKEN_VALUE}
+  _checkdns 1 ${DOMAIN} ${TOKEN_VALUE}
 }
 
 function clean_challenge {
