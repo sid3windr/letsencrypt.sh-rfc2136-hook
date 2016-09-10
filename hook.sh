@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # letsencrypt.sh dns-01 challenge RFC2136 hook.
 # Copyright (c) 2016 Tom Laermans.
@@ -22,52 +22,52 @@
 # They will not be overwritten by the statements below if they already exist in that configuration.
 
 # NSUPDATE - Path to nsupdate binary
-[[ -z "${NSUPDATE}" ]] && NSUPDATE="/usr/bin/nsupdate"
+[ -z "${NSUPDATE}" ] && NSUPDATE="/usr/bin/nsupdate"
 
 # SERVER - Master DNS server IP
-[[ -z "${SERVER}" ]] && SERVER="127.0.0.1"
+[ -z "${SERVER}" ] && SERVER="127.0.0.1"
 
 # PORT - Master DNS port (likely to be 53)
-[[ -z "${PORT}" ]] && PORT=53
+[ -z "${PORT}" ] && PORT=53
 
 # TTL - DNS Time-To-Live of ACME TXT record
-[[ -z "${TTL}" ]] && TTL=300
+[ -z "${TTL}" ] && TTL=300
 
 # DESTINATION - Copy files to subdirectory of DESTINATION upon successful certificate request
-[[ -z "${DESTINATION}" ]] && DESTINATION=
+[ -z "${DESTINATION}" ] && DESTINATION=
 
 # CERT_OWNER - If DESTINATION and CERT_OWNER are set, chown files to CERT_OWNER after copy
-[[ -z "${CERT_OWNER}" ]] && CERT_OWNER=
+[ -z "${CERT_OWNER}" ] && CERT_OWNER=
 
 # CERT_GROUP - If DESTINATION, CERT_OWNER and CERT_GROUP are set, chown files to CERT_GROUP after copy
-[[ -z "${CERT_GROUP}" ]] && CERT_GROUP=
+[ -z "${CERT_GROUP}" ] && CERT_GROUP=
 
 # CERT_MODE - If DESTINATION and CERT_MODE are set, chmod files to CERT_MODE after copy
-[[ -z "${CERT_MODE}" ]] && CERT_MODE=
+[ -z "${CERT_MODE}" ] && CERT_MODE=
 
 # CERTDIR_OWNER - If DESTINATION and CERTDIR_OWNER are set, chown files to CERTDIR_OWNER after copy
-[[ -z "${CERTDIR_OWNER}" ]] && CERTDIR_OWNER=
+[ -z "${CERTDIR_OWNER}" ] && CERTDIR_OWNER=
 
 # CERTDIR_GROUP - If DESTINATION, CERTDIR_OWNER and CERTDIR_GROUP are set, chown files to CERTDIR_GROUP after copy
-[[ -z "${CERTDIR_GROUP}" ]] && CERTDIR_GROUP=
+[ -z "${CERTDIR_GROUP}" ] && CERTDIR_GROUP=
 
 # CERTDIR_MODE - If DESTINATION and CERT_MODE are set, chmod files to CERT_MODE after copy
-[[ -z "${CERTDIR_MODE}" ]] && CERTDIR_MODE=
+[ -z "${CERTDIR_MODE}" ] && CERTDIR_MODE=
 
 # ATTEMPTS - Wait $ATTEMPTS times $SLEEP seconds for propagation to succeed, then bail out.
-[[ -z "${ATTEMPTS}" ]] && ATTEMPTS=10
+[ -z "${ATTEMPTS}" ] && ATTEMPTS=10
 
 # SLEEP - Amount of seconds to sleep before retrying propagation check.
-[[ -z "${SLEEP}" ]] && SLEEP=30
+[ -z "${SLEEP}" ] && SLEEP=30
 
 # DOMAINS_TXT - Path to the domains.txt file containing all requested certificates.
-[[ -z "${DOMAINS_TXT}" ]] && DOMAINS_TXT="${BASEDIR}/domains.txt"
+[ -z "${DOMAINS_TXT}" ] && DOMAINS_TXT="${BASEDIR}/domains.txt"
 
-function _log {
+_log() {
     echo >&2 "   + ${@}"
 }
 
-function _checkdns {
+_checkdns() {
   local ATTEMPT="${1}" DOMAIN="${2}" TOKEN_VALUE="${3}"
 
   if [ $ATTEMPT -gt $ATTEMPTS ];
@@ -91,7 +91,7 @@ function _checkdns {
   fi
 }
 
-function deploy_challenge {
+deploy_challenge() {
   local DOMAIN="${1}" TOKEN_FILENAME="${2}" TOKEN_VALUE="${3}"
 
   # This hook is called once for every domain that needs to be
@@ -125,7 +125,7 @@ function deploy_challenge {
   _checkdns 1 ${DOMAIN} ${TOKEN_VALUE}
 }
 
-function clean_challenge {
+clean_challenge() {
   local DOMAIN="${1}" TOKEN_FILENAME="${2}" TOKEN_VALUE="${3}"
 
   # This hook is called after attempting to validate each domain,
@@ -143,7 +143,7 @@ function clean_challenge {
   fi
 }
 
-function deploy_cert {
+deploy_cert() {
   local DOMAIN="${1}" KEYFILE="${2}" CERTFILE="${3}" CHAINFILE="${4}"
 
   # If destination is set, copy/chown/chmod certificate files
@@ -192,7 +192,7 @@ function deploy_cert {
   fi
 }
 
-function unchanged_cert {
+unchanged_cert() {
   local DOMAIN="${1}" KEYFILE="${2}" CERTFILE="${3}" CHAINFILE="${4}"
 
   # NOOP
