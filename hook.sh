@@ -118,7 +118,7 @@ deploy_challenge() {
     _log "Failure reported by nsupdate. Bailing out!"
     exit 2
   fi
-  
+
   # Allow at least a little time to propagate to slaves before asking Google
   sleep 5
 
@@ -193,9 +193,21 @@ deploy_cert() {
 }
 
 unchanged_cert() {
-  local DOMAIN="${1}" KEYFILE="${2}" CERTFILE="${3}" CHAINFILE="${4}"
-
   # NOOP
+
+  :
+}
+
+startup_hook() {
+  # NOOP
+
+  :
+}
+
+exit_hook() {
+  # NOOP
+
+  :
 }
 
 HANDLER=$1; shift; $HANDLER $@
