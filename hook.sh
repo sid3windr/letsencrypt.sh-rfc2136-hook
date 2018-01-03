@@ -24,6 +24,12 @@
 # NSUPDATE - Path to nsupdate binary
 [ -z "${NSUPDATE}" ] && NSUPDATE="/usr/bin/nsupdate"
 
+# NSUPDATEUSER - key user for nsupdate
+[ -z "${NSUPDATEUSER}" ] && NSUPDATEUSER=""
+
+# NSUPDATEKEY - key for nsupdate
+[ -z "${NSUPDATEKEY}" ] && NSUPDATEKEY=""
+
 # SERVER - Master DNS server IP
 [ -z "${SERVER}" ] && SERVER="127.0.0.1"
 
@@ -111,8 +117,13 @@ deploy_challenge() {
   #   TXT record. For HTTP validation it is the value that is expected
   #   be found in the $TOKEN_FILENAME file.
 
+  local QUERY="server %s %s\nupdate add _acme-challenge.%s. %d in TXT \"%s\""
   _log "Adding ACME challenge record via RFC2136 update to ${SERVER}..."
-  printf "server %s %s\nupdate add _acme-challenge.%s. %d in TXT \"%s\"\n\n" "${SERVER}" "${PORT}" "${DOMAIN}" "${TTL}" "${TOKEN_VALUE}" | $NSUPDATE > /dev/null 2>&1
+  if [ -n "$NSUPDATEUSER" -a -n "$NSUPDATEKEY" ]
+      then
+      QUERY="${QUERY}\nkey ${NSUPDATEUSER} ${NSUPDATEKEY}"
+  fi
+  printf "${QUERY}\n\n" "${SERVER}" "${PORT}" "${DOMAIN}" "${TTL}" "${TOKEN_VALUE}" | $NSUPDATE > /dev/null 2>&1
   if [ "$?" -ne 0 ];
   then
     _log "Failure reported by nsupdate. Bailing out!"
@@ -134,8 +145,13 @@ clean_challenge() {
   #
   # The parameters are the same as for deploy_challenge.
 
+  local QUERY="server %s %s\nupdate delete _acme-challenge.%s. %d in TXT \"%s\""
   _log "Removing ACME challenge record via RFC2136 update to ${SERVER}..."
-  printf "server %s %s\nupdate delete _acme-challenge.%s. %d in TXT \"%s\"\n\n" "${SERVER}" "${PORT}" "${DOMAIN}" "${TTL}" "${TOKEN_VALUE}" | $NSUPDATE > /dev/null 2>&1
+  if [ -n "${NSUPDATEUSER}" -a -n "${NSUPDATEKEY}" ]
+      then
+      QUERY="${QUERY}\nkey ${NSUPDATEUSER} ${NSUPDATEKEY}"
+  fi
+  printf "${QUERY}\n\n" "${SERVER}" "${PORT}" "${DOMAIN}" "${TTL}" "${TOKEN_VALUE}"| $NSUPDATE > /dev/null 2>&1
   if [ "$?" -ne 0 ];
   then
     _log "Failure reported by nsupdate. Bailing out!"
@@ -190,6 +206,21 @@ deploy_cert() {
   then
     echo ${DOMAIN} >> ${DOMAINS_TXT}
   fi
+}
+
+invalid_challenge() {
+    local DOMAIN="${1}" RESPONSE="${2}"
+
+    # This hook is called if the challenge response has failed, so domain
+    # owners can be aware and act accordingly.
+    #
+    # Parameters:
+    # - DOMAIN
+    #   The primary domain name, i.e. the certificate common
+    #   name (CN).
+    # - RESPONSE
+    #   The response that the verification server returned
+    _log "Invalid challenge for ${DOMAIN}, response was ${RESPONSE}"
 }
 
 unchanged_cert() {
