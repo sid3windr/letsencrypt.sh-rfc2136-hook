@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # letsencrypt.sh dns-01 challenge RFC2136 hook.
 # Copyright (c) 2016 Tom Laermans.
@@ -223,22 +223,7 @@ invalid_challenge() {
     _log "Invalid challenge for ${DOMAIN}, response was ${RESPONSE}"
 }
 
-unchanged_cert() {
-  # NOOP
-
-  :
-}
-
-startup_hook() {
-  # NOOP
-
-  :
-}
-
-exit_hook() {
-  # NOOP
-
-  :
-}
-
-HANDLER=$1; shift; $HANDLER $@
+HANDLER="$1"; shift
+if [[ "${HANDLER}" =~ ^(deploy_challenge|clean_challenge|deploy_cert|invalid_challenge)$ ]]; then
+  "$HANDLER" "$@"
+fi
