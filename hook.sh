@@ -84,7 +84,7 @@ _checkdns() {
 
   _log "Checking for dns propagation via Google's recursor... (${ATTEMPT}/${ATTEMPTS})"
 
-  host -t txt _acme-challenge.${DOMAIN} 8.8.8.8 | grep ${TOKEN_VALUE} >/dev/null 2>&1
+  host -t txt _acme-challenge.${DOMAIN} 8.8.8.8 | grep -- ${TOKEN_VALUE} >/dev/null 2>&1
   if [ "$?" -eq 0 ];
   then
     _log "Propagation success!"
